@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skill Matrix Form</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--br:#6C3EE8;--brl:#EDE8FB;--brm:#9B7AF0;--tp:#1a1a2e;--ts:#6b6b80;--th:#a0a0b0;--bg:#f5f4f8;--sf:#fff;--bd:#e4e2ec;--am:#F5A623;--rd:#E24B4A;--gn:#1D9E75;--r:14px;--rs:8px}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tp);min-height:100vh;padding:2rem 1rem 4rem}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 20%,rgba(108,62,232,.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(108,62,232,.04) 0%,transparent 60%);pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1;max-width:700px;margin:0 auto}
+.fhead{background:linear-gradient(135deg,#6C3EE8,#9B7AF0);border-radius:var(--r) var(--r) 0 0;padding:2.5rem 2rem 2rem;color:#fff;position:relative;overflow:hidden}
+.fhead::before{content:'';position:absolute;top:-40px;right:60px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.05)}
+.fhead::after{content:'';position:absolute;bottom:-30px;right:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.07)}
+.fhead h1{font-family:'DM Serif Display',serif;font-size:26px;font-weight:400;margin-bottom:8px;position:relative}
+.fhead p{font-size:14px;opacity:.85;line-height:1.6;position:relative}
+.fhead .req-note{font-size:12px;opacity:.7;margin-top:12px;position:relative}
+.fbody{background:var(--sf);border:1px solid var(--bd);border-top:none;border-radius:0 0 var(--r) var(--r);padding:0 0 2rem;box-shadow:0 4px 24px rgba(108,62,232,.10)}
+.prog-wrap{height:3px;background:var(--bd)}.prog{height:100%;background:linear-gradient(90deg,var(--br),var(--brm));width:0%;transition:width .4s}
+/* Section divider */
+.sdiv{padding:1.4rem 2rem 0;display:flex;align-items:center;gap:12px}
+.slbl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--br);white-space:nowrap}
+.sline{flex:1;height:1px;background:var(--bd)}
+/* Question card */
+.qcard{margin:.9rem 1.5rem 0;border:1px solid var(--bd);border-radius:var(--rs);padding:1.1rem 1.4rem;transition:border-color .2s;background:var(--sf)}
+.qcard:focus-within{border-color:var(--brm)}
+.qcard.err{border-color:var(--rd)}
+.qlbl{font-size:14px;font-weight:500;color:var(--tp);margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.req{color:var(--rd);font-size:15px;line-height:1}
+.qhint{font-size:12px;color:var(--th);margin-bottom:8px;line-height:1.5}
+.errmsg{font-size:12px;color:var(--rd);margin-top:6px;display:none}
+.qcard.err .errmsg{display:block}
+.tinput{width:100%;border:1px solid var(--bd);border-radius:var(--rs);padding:9px 13px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--tp);background:#fafafa;transition:border-color .2s;outline:none}
+.tinput:focus{border-color:var(--br);background:#fff}
+textarea.tinput{resize:vertical;min-height:80px;line-height:1.6}
+/* Direct rating block */
+.dblock{margin:.9rem 1.5rem 0;border:1px solid var(--bd);border-radius:var(--rs);overflow:hidden}
+.dhead{padding:.9rem 1.4rem .7rem;background:#fafafa;border-bottom:1px solid var(--bd)}
+.dhead-t{font-size:14px;font-weight:500;color:var(--tp)}
+.dhead-h{font-size:12px;color:var(--th);margin-top:2px}
+.drow{display:flex;align-items:center;padding:11px 1.4rem;border-bottom:1px solid var(--bd);gap:10px;transition:background .15s}
+.drow:last-child{border-bottom:none}
+.drow:hover{background:#fafbff}
+.dname{font-size:14px;font-weight:500;color:var(--tp);min-width:160px;flex-shrink:0}
+.dstars{display:flex;gap:3px;flex:1;flex-wrap:wrap}
+.dbadge{font-size:11px;font-weight:600;color:var(--th);min-width:52px;text-align:right;flex-shrink:0}
+.dbadge.on{color:var(--br)}
+/* Multi select block */
+.mblock{margin:.9rem 1.5rem 0;border:1px solid var(--bd);border-radius:var(--rs);overflow:hidden}
+.mblock.err{border-color:var(--rd)}
+.mhead{padding:.9rem 1.4rem .7rem;background:#fafafa;border-bottom:1px solid var(--bd)}
+.mhead-t{font-size:14px;font-weight:500;color:var(--tp);display:flex;align-items:center;gap:4px}
+.mhead-h{font-size:12px;color:var(--th);margin-top:2px}
+.mrow{display:flex;align-items:center;padding:10px 1.4rem;border-bottom:1px solid var(--bd);gap:10px;transition:background .15s}
+.mrow:last-child{border-bottom:none}
+.mrow:hover{background:#fafbff}
+.orow{display:flex;align-items:center;padding:9px 1.4rem;border-top:1px solid var(--bd);gap:10px;background:#fafafa}
+.schk{width:18px;height:18px;accent-color:var(--br);cursor:pointer;flex-shrink:0}
+.sname{font-size:14px;font-weight:500;min-width:140px;cursor:pointer;user-select:none;flex-shrink:0;transition:color .15s;color:var(--th)}
+.sname.on{color:var(--tp)}
+.sra{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.sra.locked{opacity:.3;pointer-events:none}
+.mstars{display:flex;gap:3px;flex-wrap:wrap}
+.mbadge{font-size:11px;font-weight:600;color:var(--th);min-width:40px;text-align:right;flex-shrink:0}
+.mbadge.on{color:var(--br)}
+.oinp{flex:1;border:none;border-bottom:1px solid var(--bd);padding:4px 0;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--tp);outline:none;background:transparent;transition:border-color .2s}
+.oinp:focus{border-color:var(--br)}
+.oinp.locked{opacity:.3;pointer-events:none}
+/* Shared star */
+.star{font-size:20px;cursor:pointer;color:#ddd;transition:color .1s,transform .1s;line-height:1;user-select:none}
+.star:hover{transform:scale(1.15)}
+.star.lit{color:var(--am)}
+/* Submit */
+.subrow{padding:1.5rem 1.5rem 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.btn-sub{background:var(--br);color:#fff;border:none;border-radius:100px;padding:12px 36px;font-size:15px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;transition:background .2s,opacity .2s}
+.btn-sub:hover{background:#5530cc}
+.btn-sub:disabled{opacity:.6;cursor:not-allowed}
+.btn-clr{background:transparent;color:var(--ts);border:1px solid var(--bd);border-radius:100px;padding:11px 22px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .2s}
+.btn-clr:hover{background:var(--bg)}
+/* Success */
+.succ{display:none;flex-direction:column;align-items:center;justify-content:center;padding:4rem 2rem;text-align:center}
+.sico{width:70px;height:70px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;margin-bottom:1.5rem;color:var(--gn);font-size:32px}
+.succ h2{font-family:'DM Serif Display',serif;font-size:26px;font-weight:400;margin-bottom:8px}
+.succ p{font-size:14px;color:var(--ts);line-height:1.7;max-width:400px}
+@media(max-width:520px){.dname,.sname{min-width:90px;font-size:13px}.star{font-size:17px}.qcard,.mblock,.dblock{margin-left:1rem;margin-right:1rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="fhead">
+    <h1>Skill Matrix Form</h1>
+    <p>Please rate your proficiency across all tools and skills listed below. Your responses will help us understand your strengths and expertise areas.</p>
+    <div class="req-note">* Required fields</div>
+  </div>
+  <div class="fbody">
+    <div class="prog-wrap"><div class="prog" id="prog"></div></div>
+    <form id="mform" novalidate>
+
+      <!-- ── Personal Info ── -->
+      <div class="sdiv"><span class="slbl">Personal Information</span><div class="sline"></div></div>
+
+      <div class="qcard" id="card-name">
+        <div class="qlbl">Full Name <span class="req">*</span></div>
+        <input type="text" class="tinput" id="f-name" placeholder="e.g. Rahul Sharma" oninput="uprog()">
+        <div class="errmsg">Please enter your full name.</div>
+      </div>
+
+      <div class="qcard" id="card-email">
+        <div class="qlbl">Email Address <span class="req">*</span></div>
+        <div class="qhint">A copy of your responses will be sent to this email.</div>
+        <input type="email" class="tinput" id="f-email" placeholder="e.g. rahul@rightwave.com" oninput="uprog()">
+        <div class="errmsg">Please enter a valid email address.</div>
+      </div>
+
+      <div class="qcard" id="card-role">
+        <div class="qlbl">Current Role / Designation <span class="req">*</span></div>
+        <input type="text" class="tinput" id="f-role" placeholder="e.g. Marketing Automation Specialist" oninput="uprog()">
+        <div class="errmsg">Please enter your role.</div>
+      </div>
+
+      <div class="qcard">
+        <div class="qlbl">Department</div>
+        <input type="text" class="tinput" id="f-dept" placeholder="e.g. Marketing, Sales, IT" oninput="uprog()">
+      </div>
+
+      <div class="qcard">
+        <div class="qlbl">Years of Experience</div>
+        <input type="text" class="tinput" id="f-exp" placeholder="e.g. 3 years" oninput="uprog()">
+      </div>
+
+      <!-- ── Core Skills — Direct Rating (1–10) ── -->
+      <div class="sdiv"><span class="slbl">Core Skills</span><div class="sline"></div></div>
+
+      <div class="dblock">
+        <div class="dhead">
+          <div class="dhead-t">Rate your proficiency in each skill</div>
+          <div class="dhead-h">Click stars to rate — 1 = Beginner &nbsp;·&nbsp; 10 = Expert</div>
+        </div>
+        <div class="drow"><span class="dname">Marketo</span><div class="dstars" id="dst-marketo"></div><span class="dbadge" id="dbg-marketo">—</span></div>
+        <div class="drow"><span class="dname">HubSpot</span><div class="dstars" id="dst-hubspot"></div><span class="dbadge" id="dbg-hubspot">—</span></div>
+        <div class="drow"><span class="dname">SFDC</span><div class="dstars" id="dst-sfdc"></div><span class="dbadge" id="dbg-sfdc">—</span></div>
+        <div class="drow"><span class="dname">SFMC</span><div class="dstars" id="dst-sfmc"></div><span class="dbadge" id="dbg-sfmc">—</span></div>
+        <div class="drow"><span class="dname">RW-MAAS</span><div class="dstars" id="dst-rwmaas"></div><span class="dbadge" id="dbg-rwmaas">—</span></div>
+        <div class="drow"><span class="dname">Pardot</span><div class="dstars" id="dst-pardot"></div><span class="dbadge" id="dbg-pardot">—</span></div>
+        <div class="drow"><span class="dname">MS SQL</span><div class="dstars" id="dst-mssql"></div><span class="dbadge" id="dbg-mssql">—</span></div>
+        <div class="drow"><span class="dname">HTML / CSS</span><div class="dstars" id="dst-htmlcss"></div><span class="dbadge" id="dbg-htmlcss">—</span></div>
+        <div class="drow"><span class="dname">Client Communication</span><div class="dstars" id="dst-clientcomm"></div><span class="dbadge" id="dbg-clientcomm">—</span></div>
+        <div class="drow"><span class="dname">WordPress</span><div class="dstars" id="dst-wordpress"></div><span class="dbadge" id="dbg-wordpress">—</span></div>
+        <div class="drow"><span class="dname">RDN</span><div class="dstars" id="dst-rdn"></div><span class="dbadge" id="dbg-rdn">—</span></div>
+      </div>
+
+      <!-- ── Webinar Integration Tools ── -->
+      <div class="sdiv"><span class="slbl">Webinar Integration Tools</span><div class="sline"></div></div>
+      <div class="mblock" id="mb-webinar">
+        <div class="mhead">
+          <div class="mhead-t">Select tools you use &amp; rate your proficiency <span class="req">*</span></div>
+          <div class="mhead-h">Check a tool to activate rating — 1 = Beginner &nbsp;·&nbsp; 10 = Expert</div>
+        </div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-on24" onchange="tog('on24','webinar')"><label class="sname" for="chk-on24" id="lbl-on24">ON24</label><div class="sra locked" id="sra-on24"><div class="mstars" id="mst-on24"></div><span class="mbadge" id="mbg-on24">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-gtw" onchange="tog('gtw','webinar')"><label class="sname" for="chk-gtw" id="lbl-gtw">Go To Webinar</label><div class="sra locked" id="sra-gtw"><div class="mstars" id="mst-gtw"></div><span class="mbadge" id="mbg-gtw">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-zoom" onchange="tog('zoom','webinar')"><label class="sname" for="chk-zoom" id="lbl-zoom">Zoom</label><div class="sra locked" id="sra-zoom"><div class="mstars" id="mst-zoom"></div><span class="mbadge" id="mbg-zoom">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-brighttalk" onchange="tog('brighttalk','webinar')"><label class="sname" for="chk-brighttalk" id="lbl-brighttalk">Brighttalk</label><div class="sra locked" id="sra-brighttalk"><div class="mstars" id="mst-brighttalk"></div><span class="mbadge" id="mbg-brighttalk">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-cvent" onchange="tog('cvent','webinar')"><label class="sname" for="chk-cvent" id="lbl-cvent">Cvent</label><div class="sra locked" id="sra-cvent"><div class="mstars" id="mst-cvent"></div><span class="mbadge" id="mbg-cvent">—</span></div></div>
+        <div class="orow"><input type="checkbox" class="schk" id="chk-oweb" onchange="togOther('oweb')"><label class="sname" for="chk-oweb" id="lbl-oweb">Other</label><input class="oinp locked" id="oinp-oweb" placeholder="Please specify..." disabled></div>
+      </div>
+
+      <!-- ── MS Office Tools ── -->
+      <div class="sdiv"><span class="slbl">MS Office Tools</span><div class="sline"></div></div>
+      <div class="mblock" id="mb-msoffice">
+        <div class="mhead">
+          <div class="mhead-t">Select tools you use &amp; rate your proficiency <span class="req">*</span></div>
+          <div class="mhead-h">Check a tool to activate rating — 1 = Beginner &nbsp;·&nbsp; 10 = Expert</div>
+        </div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-excel" onchange="tog('excel','msoffice')"><label class="sname" for="chk-excel" id="lbl-excel">Excel</label><div class="sra locked" id="sra-excel"><div class="mstars" id="mst-excel"></div><span class="mbadge" id="mbg-excel">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-ppt" onchange="tog('ppt','msoffice')"><label class="sname" for="chk-ppt" id="lbl-ppt">PowerPoint</label><div class="sra locked" id="sra-ppt"><div class="mstars" id="mst-ppt"></div><span class="mbadge" id="mbg-ppt">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-word" onchange="tog('word','msoffice')"><label class="sname" for="chk-word" id="lbl-word">Word</label><div class="sra locked" id="sra-word"><div class="mstars" id="mst-word"></div><span class="mbadge" id="mbg-word">—</span></div></div>
+        <div class="orow"><input type="checkbox" class="schk" id="chk-ooff" onchange="togOther('ooff')"><label class="sname" for="chk-ooff" id="lbl-ooff">Other</label><input class="oinp locked" id="oinp-ooff" placeholder="Please specify..." disabled></div>
+      </div>
+
+      <!-- ── Business Intelligence Tools ── -->
+      <div class="sdiv"><span class="slbl">Business Intelligence Tools</span><div class="sline"></div></div>
+      <div class="mblock" id="mb-bi">
+        <div class="mhead">
+          <div class="mhead-t">Select tools you use &amp; rate your proficiency <span class="req">*</span></div>
+          <div class="mhead-h">Check a tool to activate rating — 1 = Beginner &nbsp;·&nbsp; 10 = Expert</div>
+        </div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-powerbi" onchange="tog('powerbi','bi')"><label class="sname" for="chk-powerbi" id="lbl-powerbi">Power BI</label><div class="sra locked" id="sra-powerbi"><div class="mstars" id="mst-powerbi"></div><span class="mbadge" id="mbg-powerbi">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-tableau" onchange="tog('tableau','bi')"><label class="sname" for="chk-tableau" id="lbl-tableau">Tableau</label><div class="sra locked" id="sra-tableau"><div class="mstars" id="mst-tableau"></div><span class="mbadge" id="mbg-tableau">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-domo" onchange="tog('domo','bi')"><label class="sname" for="chk-domo" id="lbl-domo">Domo</label><div class="sra locked" id="sra-domo"><div class="mstars" id="mst-domo"></div><span class="mbadge" id="mbg-domo">—</span></div></div>
+        <div class="orow"><input type="checkbox" class="schk" id="chk-obi" onchange="togOther('obi')"><label class="sname" for="chk-obi" id="lbl-obi">Other</label><input class="oinp locked" id="oinp-obi" placeholder="Please specify..." disabled></div>
+      </div>
+
+      <!-- ── Scripting Tools ── -->
+      <div class="sdiv"><span class="slbl">Scripting Tools</span><div class="sline"></div></div>
+      <div class="mblock" id="mb-scripting">
+        <div class="mhead">
+          <div class="mhead-t">Select tools you use &amp; rate your proficiency <span class="req">*</span></div>
+          <div class="mhead-h">Check a tool to activate rating — 1 = Beginner &nbsp;·&nbsp; 10 = Expert</div>
+        </div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-js" onchange="tog('js','scripting')"><label class="sname" for="chk-js" id="lbl-js">JavaScript</label><div class="sra locked" id="sra-js"><div class="mstars" id="mst-js"></div><span class="mbadge" id="mbg-js">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-velocity" onchange="tog('velocity','scripting')"><label class="sname" for="chk-velocity" id="lbl-velocity">Velocity Script</label><div class="sra locked" id="sra-velocity"><div class="mstars" id="mst-velocity"></div><span class="mbadge" id="mbg-velocity">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-ampscript" onchange="tog('ampscript','scripting')"><label class="sname" for="chk-ampscript" id="lbl-ampscript">AMP Script</label><div class="sra locked" id="sra-ampscript"><div class="mstars" id="mst-ampscript"></div><span class="mbadge" id="mbg-ampscript">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-appsscript" onchange="tog('appsscript','scripting')"><label class="sname" for="chk-appsscript" id="lbl-appsscript">Apps Script</label><div class="sra locked" id="sra-appsscript"><div class="mstars" id="mst-appsscript"></div><span class="mbadge" id="mbg-appsscript">—</span></div></div>
+        <div class="orow"><input type="checkbox" class="schk" id="chk-oscript" onchange="togOther('oscript')"><label class="sname" for="chk-oscript" id="lbl-oscript">Other</label><input class="oinp locked" id="oinp-oscript" placeholder="Please specify..." disabled></div>
+      </div>
+
+      <!-- ── Automation Tools ── -->
+      <div class="sdiv"><span class="slbl">Automation Tools</span><div class="sline"></div></div>
+      <div class="mblock" id="mb-automation">
+        <div class="mhead">
+          <div class="mhead-t">Select tools you use &amp; rate your proficiency <span class="req">*</span></div>
+          <div class="mhead-h">Check a tool to activate rating — 1 = Beginner &nbsp;·&nbsp; 10 = Expert</div>
+        </div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-workato" onchange="tog('workato','automation')"><label class="sname" for="chk-workato" id="lbl-workato">Workato</label><div class="sra locked" id="sra-workato"><div class="mstars" id="mst-workato"></div><span class="mbadge" id="mbg-workato">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-zapier" onchange="tog('zapier','automation')"><label class="sname" for="chk-zapier" id="lbl-zapier">Zapier</label><div class="sra locked" id="sra-zapier"><div class="mstars" id="mst-zapier"></div><span class="mbadge" id="mbg-zapier">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-trayio" onchange="tog('trayio','automation')"><label class="sname" for="chk-trayio" id="lbl-trayio">Tray.io</label><div class="sra locked" id="sra-trayio"><div class="mstars" id="mst-trayio"></div><span class="mbadge" id="mbg-trayio">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-n8n" onchange="tog('n8n','automation')"><label class="sname" for="chk-n8n" id="lbl-n8n">n8n</label><div class="sra locked" id="sra-n8n"><div class="mstars" id="mst-n8n"></div><span class="mbadge" id="mbg-n8n">—</span></div></div>
+        <div class="orow"><input type="checkbox" class="schk" id="chk-oauto" onchange="togOther('oauto')"><label class="sname" for="chk-oauto" id="lbl-oauto">Other</label><input class="oinp locked" id="oinp-oauto" placeholder="Please specify..." disabled></div>
+      </div>
+
+      <!-- ── AI Tools ── -->
+      <div class="sdiv"><span class="slbl">AI Tools</span><div class="sline"></div></div>
+      <div class="mblock" id="mb-ai">
+        <div class="mhead">
+          <div class="mhead-t">Select tools you use &amp; rate your proficiency <span class="req">*</span></div>
+          <div class="mhead-h">Check a tool to activate rating — 1 = Beginner &nbsp;·&nbsp; 10 = Expert</div>
+        </div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-chatgpt" onchange="tog('chatgpt','ai')"><label class="sname" for="chk-chatgpt" id="lbl-chatgpt">ChatGPT</label><div class="sra locked" id="sra-chatgpt"><div class="mstars" id="mst-chatgpt"></div><span class="mbadge" id="mbg-chatgpt">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-gemini" onchange="tog('gemini','ai')"><label class="sname" for="chk-gemini" id="lbl-gemini">Gemini</label><div class="sra locked" id="sra-gemini"><div class="mstars" id="mst-gemini"></div><span class="mbadge" id="mbg-gemini">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-claude" onchange="tog('claude','ai')"><label class="sname" for="chk-claude" id="lbl-claude">Claude</label><div class="sra locked" id="sra-claude"><div class="mstars" id="mst-claude"></div><span class="mbadge" id="mbg-claude">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-perplexity" onchange="tog('perplexity','ai')"><label class="sname" for="chk-perplexity" id="lbl-perplexity">Perplexity</label><div class="sra locked" id="sra-perplexity"><div class="mstars" id="mst-perplexity"></div><span class="mbadge" id="mbg-perplexity">—</span></div></div>
+        <div class="orow"><input type="checkbox" class="schk" id="chk-oai" onchange="togOther('oai')"><label class="sname" for="chk-oai" id="lbl-oai">Other</label><input class="oinp locked" id="oinp-oai" placeholder="Please specify..." disabled></div>
+      </div>
+
+      <!-- ── Routing Tools ── -->
+      <div class="sdiv"><span class="slbl">Routing Tools</span><div class="sline"></div></div>
+      <div class="mblock" id="mb-routing">
+        <div class="mhead">
+          <div class="mhead-t">Select tools you use &amp; rate your proficiency <span class="req">*</span></div>
+          <div class="mhead-h">Check a tool to activate rating — 1 = Beginner &nbsp;·&nbsp; 10 = Expert</div>
+        </div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-leandata" onchange="tog('leandata','routing')"><label class="sname" for="chk-leandata" id="lbl-leandata">Lean Data</label><div class="sra locked" id="sra-leandata"><div class="mstars" id="mst-leandata"></div><span class="mbadge" id="mbg-leandata">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-fullcast" onchange="tog('fullcast','routing')"><label class="sname" for="chk-fullcast" id="lbl-fullcast">Full Cast</label><div class="sra locked" id="sra-fullcast"><div class="mstars" id="mst-fullcast"></div><span class="mbadge" id="mbg-fullcast">—</span></div></div>
+        <div class="orow"><input type="checkbox" class="schk" id="chk-orout" onchange="togOther('orout')"><label class="sname" for="chk-orout" id="lbl-orout">Other</label><input class="oinp locked" id="oinp-orout" placeholder="Please specify..." disabled></div>
+      </div>
+
+      <!-- ── Project Management ── -->
+      <div class="sdiv"><span class="slbl">Project Management Tools</span><div class="sline"></div></div>
+      <div class="mblock" id="mb-pm">
+        <div class="mhead">
+          <div class="mhead-t">Select tools you use &amp; rate your proficiency <span class="req">*</span></div>
+          <div class="mhead-h">Check a tool to activate rating — 1 = Beginner &nbsp;·&nbsp; 10 = Expert</div>
+        </div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-monday" onchange="tog('monday','pm')"><label class="sname" for="chk-monday" id="lbl-monday">Monday</label><div class="sra locked" id="sra-monday"><div class="mstars" id="mst-monday"></div><span class="mbadge" id="mbg-monday">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-asana" onchange="tog('asana','pm')"><label class="sname" for="chk-asana" id="lbl-asana">Asana</label><div class="sra locked" id="sra-asana"><div class="mstars" id="mst-asana"></div><span class="mbadge" id="mbg-asana">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-jira" onchange="tog('jira','pm')"><label class="sname" for="chk-jira" id="lbl-jira">Jira</label><div class="sra locked" id="sra-jira"><div class="mstars" id="mst-jira"></div><span class="mbadge" id="mbg-jira">—</span></div></div>
+        <div class="mrow"><input type="checkbox" class="schk" id="chk-freshservice" onchange="tog('freshservice','pm')"><label class="sname" for="chk-freshservice" id="lbl-freshservice">Freshservice</label><div class="sra locked" id="sra-freshservice"><div class="mstars" id="mst-freshservice"></div><span class="mbadge" id="mbg-freshservice">—</span></div></div>
+        <div class="orow"><input type="checkbox" class="schk" id="chk-opm" onchange="togOther('opm')"><label class="sname" for="chk-opm" id="lbl-opm">Other</label><input class="oinp locked" id="oinp-opm" placeholder="Please specify..." disabled></div>
+      </div>
+
+
+
+      <div class="subrow">
+        <button type="button" class="btn-clr" onclick="clrForm()">Clear form</button>
+        <button type="button" class="btn-sub" id="btnSubmit" onclick="subForm()">Submit Response</button>
+      </div>
+    </form>
+
+    <div class="succ" id="succ">
+      <div class="sico">✓</div>
+      <h2>Response Submitted!</h2>
+      <p>Thank you for completing the Skill Matrix Form.<br>Your responses have been recorded successfully.</p>
+      <button onclick="resetForm()" style="margin-top:1.5rem;background:#6C3EE8;color:white;border:none;border-radius:100px;padding:12px 28px;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;">Fill Another Response</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const GF_ACTION = 'https://docs.google.com/forms/d/e/1FAIpQLSdh5tFBRY2ZZKMxJ9SXDf7Itewkh6fJ9-0Y9ZJZFReYYW_E2w/formResponse';
+const GF_ENTRIES = {
+  'Full Name':                          'entry.1512313339',
+  'Email Address':                      'entry.1532482179',
+  'Role':                               'entry.2124763468',
+  'Department':                         'entry.1905069927',
+  'Years of Experience':                'entry.1255247461',
+  'Marketo':                            'entry.1538045192',
+  'HubSpot':                            'entry.1076401096',
+  'SFDC':                               'entry.1478842785',
+  'SFMC':                               'entry.1527517621',
+  'RW-MAAS':                            'entry.271707820',
+  'Pardot':                             'entry.361333205',
+  'MS SQL':                             'entry.1207652935',
+  'HTML/CSS':                           'entry.4375321',
+  'Client Communication':               'entry.1834689097',
+  'WordPress':                          'entry.1189391563',
+  'RDN':                                'entry.100820789',
+  'Webinar Tools Selected':             'entry.141485865',
+  'MS Office Tools Selected':           'entry.1174977212',
+  'BI Tools Selected':                  'entry.617936768',
+  'Scripting Tools Selected':           'entry.1082050670',
+  'Automation Tools Selected':          'entry.984777975',
+  'AI Tools Selected':                  'entry.412091309',
+  'Routing Tools Selected':             'entry.967812522',
+  'Project Management Tools Selected':  'entry.1327636199',
+  'Additional Comments':                'entry.1802864103',
+  'Submitted At':                       'entry.1135765551'
+};
+const R = {};
+
+// ── Init direct rating stars (1–10) ──
+const directSkills = [
+  {id:'marketo',label:'Marketo'},{id:'hubspot',label:'HubSpot'},{id:'sfdc',label:'SFDC'},
+  {id:'sfmc',label:'SFMC'},{id:'rwmaas',label:'RW-MAAS'},{id:'pardot',label:'Pardot'},
+  {id:'mssql',label:'MS SQL'},{id:'htmlcss',label:'HTML/CSS'},{id:'clientcomm',label:'Client Communication'},
+  {id:'wordpress',label:'WordPress'},{id:'rdn',label:'RDN'}
+];
+
+directSkills.forEach(({id,label}) => {
+  const el = document.getElementById('dst-'+id);
+  const badge = document.getElementById('dbg-'+id);
+  if (!el) return;
+  for (let i=1; i<=10; i++) {
+    const s = document.createElement('span');
+    s.className = 'star'; s.textContent = '★'; s.dataset.v = i;
+    s.addEventListener('mouseenter', () => {
+      el.querySelectorAll('.star').forEach(x => x.classList.toggle('lit', +x.dataset.v <= i));
+    });
+    s.addEventListener('mouseleave', () => {
+      const c = R[id]||0;
+      el.querySelectorAll('.star').forEach(x => x.classList.toggle('lit', +x.dataset.v <= c));
+    });
+    s.addEventListener('click', () => {
+      R[id] = i;
+      el.querySelectorAll('.star').forEach(x => x.classList.toggle('lit', +x.dataset.v <= i));
+      badge.textContent = i+'/10';
+      badge.classList.add('on');
+      uprog();
+    });
+    el.appendChild(s);
+  }
+});
+
+// ── Init multi-select stars (1–5) ──
+const multiTools = [
+  'on24','gtw','zoom','brighttalk','cvent',
+  'excel','ppt','word',
+  'powerbi','tableau','domo',
+  'js','velocity','ampscript','appsscript',
+  'workato','zapier','trayio','n8n',
+  'chatgpt','gemini','claude','perplexity',
+  'leandata','fullcast',
+  'monday','asana','jira','freshservice'
+];
+
+multiTools.forEach(id => {
+  const el = document.getElementById('mst-'+id);
+  const badge = document.getElementById('mbg-'+id);
+  if (!el) return;
+  for (let i=1; i<=10; i++) {
+    const s = document.createElement('span');
+    s.className = 'star'; s.textContent = '★'; s.dataset.v = i;
+    s.addEventListener('mouseenter', () => {
+      el.querySelectorAll('.star').forEach(x => x.classList.toggle('lit', +x.dataset.v <= i));
+    });
+    s.addEventListener('mouseleave', () => {
+      const c = R[id]||0;
+      el.querySelectorAll('.star').forEach(x => x.classList.toggle('lit', +x.dataset.v <= c));
+    });
+    s.addEventListener('click', () => {
+      R[id] = i;
+      el.querySelectorAll('.star').forEach(x => x.classList.toggle('lit', +x.dataset.v <= i));
+      badge.textContent = i+'/10';
+      badge.classList.add('on');
+      uprog();
+    });
+    el.appendChild(s);
+  }
+});
+
+// ── Toggle multi-select ──
+function tog(id, blockId) {
+  const chk = document.getElementById('chk-'+id);
+  const lbl = document.getElementById('lbl-'+id);
+  const sra = document.getElementById('sra-'+id);
+  const badge = document.getElementById('mbg-'+id);
+  const stars = document.querySelectorAll('#mst-'+id+' .star');
+  if (chk.checked) {
+    lbl && lbl.classList.add('on');
+    sra && sra.classList.remove('locked');
+  } else {
+    lbl && lbl.classList.remove('on');
+    sra && sra.classList.add('locked');
+    R[id] = 0;
+    stars.forEach(s => s.classList.remove('lit'));
+    if (badge) { badge.textContent = '—'; badge.classList.remove('on'); }
+  }
+  // Clear block error if any selected
+  const block = document.getElementById('mb-'+blockId);
+  if (block && block.querySelector('.schk:checked')) block.classList.remove('err');
+  uprog();
+}
+
+// ── Toggle Other ──
+function togOther(id) {
+  const chk = document.getElementById('chk-'+id);
+  const lbl = document.getElementById('lbl-'+id);
+  const inp = document.getElementById('oinp-'+id);
+  if (chk && chk.checked) {
+    lbl && lbl.classList.add('on');
+    if (inp) { inp.classList.remove('locked'); inp.disabled = false; inp.focus(); }
+  } else {
+    lbl && lbl.classList.remove('on');
+    if (inp) { inp.classList.add('locked'); inp.disabled = true; inp.value = ''; }
+  }
+}
+
+// ── Progress bar ──
+function uprog() {
+  const total = 3 + directSkills.length + multiTools.length;
+  let filled = 0;
+  if (document.getElementById('f-name').value.trim()) filled++;
+  if (document.getElementById('f-email').value.trim()) filled++;
+  if (document.getElementById('f-role').value.trim()) filled++;
+  directSkills.forEach(({id}) => { if (R[id]>0) filled++; });
+  multiTools.forEach(id => { if (document.getElementById('chk-'+id)?.checked) filled++; });
+  document.getElementById('prog').style.width = Math.min(100, Math.round(filled/total*100)) + '%';
+}
+document.querySelectorAll('.tinput').forEach(i => i.addEventListener('input', uprog));
+
+// ── Collect all form data ──
+function collectData() {
+  const d = {};
+  d['Full Name'] = document.getElementById('f-name').value.trim();
+  d['Email Address'] = document.getElementById('f-email').value.trim();
+  d['Role'] = document.getElementById('f-role').value.trim();
+  d['Department'] = document.getElementById('f-dept').value.trim();
+  d['Years of Experience'] = document.getElementById('f-exp').value.trim();
+
+  // Direct ratings
+  directSkills.forEach(({id, label}) => {
+    d[label] = R[id] ? R[id]+'/10' : 'Not rated';
+  });
+
+  // Multi-select sections
+  const sections = {
+    webinar: ['on24','gtw','zoom','brighttalk','cvent'],
+    msoffice: ['excel','ppt','word'],
+    bi: ['powerbi','tableau','domo'],
+    scripting: ['js','velocity','ampscript','appsscript'],
+    automation: ['workato','zapier','trayio','n8n'],
+    ai: ['chatgpt','gemini','claude','perplexity'],
+    routing: ['leandata','fullcast'],
+    pm: ['monday','asana','jira','freshservice']
+  };
+  const labels = {
+    on24:'ON24', gtw:'Go To Webinar', zoom:'Zoom', brighttalk:'Brighttalk', cvent:'Cvent',
+    excel:'Excel', ppt:'PowerPoint', word:'Word',
+    powerbi:'Power BI', tableau:'Tableau', domo:'Domo',
+    js:'JavaScript', velocity:'Velocity Script', ampscript:'AMP Script', appsscript:'Apps Script',
+    workato:'Workato', zapier:'Zapier', trayio:'Tray.io', n8n:'n8n',
+    chatgpt:'ChatGPT', gemini:'Gemini', claude:'Claude', perplexity:'Perplexity',
+    leandata:'Lean Data', fullcast:'Full Cast',
+    monday:'Monday', asana:'Asana', jira:'Jira', freshservice:'Freshservice'
+  };
+  const otherMap = {
+    webinar:'oweb', msoffice:'ooff', bi:'obi', scripting:'oscript',
+    automation:'oauto', ai:'oai', routing:'orout', pm:'opm'
+  };
+
+  const secLabels = {
+    webinar: 'Webinar Tools Selected',
+    msoffice: 'MS Office Tools Selected',
+    bi: 'BI Tools Selected',
+    scripting: 'Scripting Tools Selected',
+    automation: 'Automation Tools Selected',
+    ai: 'AI Tools Selected',
+    routing: 'Routing Tools Selected',
+    pm: 'Project Management Tools Selected'
+  };
+
+  Object.entries(sections).forEach(([sec, tools]) => {
+    const selected = [];
+    tools.forEach(id => {
+      const chk = document.getElementById('chk-'+id);
+      const badge = document.getElementById('mbg-'+id);
+      if (chk && chk.checked) {
+        const rating = badge && badge.textContent !== '—' ? badge.textContent : 'not rated';
+        selected.push(labels[id] + ' (' + rating + ')');
+      }
+    });
+    // Check Other
+    const othId = otherMap[sec];
+    const othChk = document.getElementById('chk-'+othId);
+    const othInp = document.getElementById('oinp-'+othId);
+    if (othChk && othChk.checked && othInp && othInp.value.trim()) {
+      selected.push('Other: ' + othInp.value.trim());
+    }
+    // Store as combined string mapped to Google Form field
+    d[secLabels[sec]] = selected.length > 0 ? selected.join(' | ') : 'None selected';
+  });
+
+  d['Additional Comments'] = '';
+  d['Submitted At'] = new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});
+  return d;
+}
+
+// ── Validate ──
+function validate() {
+  let ok = true;
+  const name = document.getElementById('f-name');
+  const email = document.getElementById('f-email');
+  const role = document.getElementById('f-role');
+  document.getElementById('card-name').classList.toggle('err', !name.value.trim());
+  if (!name.value.trim()) ok = false;
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim());
+  document.getElementById('card-email').classList.toggle('err', !emailOk);
+  if (!emailOk) ok = false;
+  document.getElementById('card-role').classList.toggle('err', !role.value.trim());
+  if (!role.value.trim()) ok = false;
+  return ok;
+}
+
+// ── Submit — auto-submit Google Form in new tab then close it ──
+function subForm() {
+  if (!validate()) {
+    document.querySelector('.err')?.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+
+  const btn = document.getElementById('btnSubmit');
+  btn.textContent = 'Submitting...';
+  btn.disabled = true;
+
+  const data = collectData();
+
+  // Build pre-filled params
+  const params = Object.entries(GF_ENTRIES)
+    .map(([label, entryId]) => encodeURIComponent(entryId) + '=' + encodeURIComponent(data[label] || ''))
+    .join('&');
+
+  // This page will auto-submit the Google Form and close itself
+  const realFormURL = window.location.href;
+  const autoSubmitHTML = `<!DOCTYPE html>
+<html>
+<head>
+<title>Submitting your response...</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',sans-serif;background:#f5f4f8;display:flex;align-items:center;justify-content:center;min-height:100vh}
+  .card{background:white;border-radius:16px;padding:2.5rem 2rem;text-align:center;max-width:340px;box-shadow:0 4px 24px rgba(108,62,232,0.10)}
+  .spinner{width:48px;height:48px;border:4px solid #EDE8FB;border-top:4px solid #6C3EE8;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1.5rem}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  h2{font-size:18px;color:#1a1a2e;margin-bottom:8px}
+  p{font-size:13px;color:#6b6b80;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="spinner"></div>
+  <h2>Submitting your response...</h2>
+  <p>Please wait, do not close this tab.</p>
+</div>
+<form id="gf" method="POST" action="${GF_ACTION}">
+${Object.entries(GF_ENTRIES).map(([label, entryId]) => 
+  '<input type="hidden" name="' + entryId + '" id="f_' + entryId + '">'
+).join('')}
+</form>
+<script>
+const entries = ${JSON.stringify(data)};
+const gfEntries = ${JSON.stringify(Object.fromEntries(Object.entries(GF_ENTRIES).map(([l,e])=>[l,e])))};
+Object.entries(gfEntries).forEach(([label, entryId]) => {
+  const el = document.getElementById('f_' + entryId);
+  if (el) el.value = entries[label] || '';
+});
+document.getElementById('gf').submit();
+setTimeout(() => window.close(), 2500);
+<\/script>
+</body>
+</html>`;
+
+  const blob = new Blob([autoSubmitHTML], {type: 'text/html'});
+  const url = URL.createObjectURL(blob);
+  const newTab = window.open(url, '_blank');
+
+  // Show success on current page
+  setTimeout(() => {
+    showSuccess();
+    URL.revokeObjectURL(url);
+  }, 1000);
+}
+
+function showSuccess() {
+  document.getElementById('mform').style.display = 'none';
+  document.getElementById('succ').style.display = 'flex';
+  document.getElementById('prog').style.width = '100%';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ── Clear ──
+function clrForm() {
+  if (!confirm('Clear all your answers?')) return;
+  document.getElementById('mform').reset();
+  multiTools.forEach(id => {
+    const chk = document.getElementById('chk-'+id);
+    if (chk) { chk.checked = false; }
+    const lbl = document.getElementById('lbl-'+id);
+    lbl && lbl.classList.remove('on');
+    const sra = document.getElementById('sra-'+id);
+    sra && sra.classList.add('locked');
+    const badge = document.getElementById('mbg-'+id);
+    if (badge) { badge.textContent = '—'; badge.classList.remove('on'); }
+    document.querySelectorAll('#mst-'+id+' .star').forEach(s => s.classList.remove('lit'));
+    R[id] = 0;
+  });
+  ['oweb','ooff','obi','oscript','oauto','oai','orout','opm'].forEach(id => {
+    const chk = document.getElementById('chk-'+id);
+    if (chk) chk.checked = false;
+    const inp = document.getElementById('oinp-'+id);
+    if (inp) { inp.classList.add('locked'); inp.disabled = true; inp.value = ''; }
+    const lbl = document.getElementById('lbl-'+id);
+    if (lbl) lbl.classList.remove('on');
+  });
+  directSkills.forEach(({id}) => {
+    R[id] = 0;
+    const badge = document.getElementById('dbg-'+id);
+    if (badge) { badge.textContent = '—'; badge.classList.remove('on'); }
+    document.querySelectorAll('#dst-'+id+' .star').forEach(s => s.classList.remove('lit'));
+  });
+  document.querySelectorAll('.qcard.err,.mblock.err').forEach(e => e.classList.remove('err'));
+  uprog();
+}
+
+function resetForm() {
+  // Reset all inputs
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-email').value = '';
+  document.getElementById('f-role').value = '';
+  document.getElementById('f-dept').value = '';
+  document.getElementById('f-exp').value = '';
+
+  // Reset direct ratings
+  directSkills.forEach(({id}) => {
+    R[id] = 0;
+    const badge = document.getElementById('dbg-'+id);
+    if (badge) { badge.textContent = '—'; badge.classList.remove('on'); }
+    document.querySelectorAll('#dst-'+id+' .star').forEach(s => s.classList.remove('lit'));
+  });
+
+  // Reset multi-select
+  multiTools.forEach(id => {
+    const chk = document.getElementById('chk-'+id);
+    if (chk) chk.checked = false;
+    const lbl = document.getElementById('lbl-'+id);
+    if (lbl) lbl.classList.remove('on');
+    const sra = document.getElementById('sra-'+id);
+    if (sra) sra.classList.add('locked');
+    const badge = document.getElementById('mbg-'+id);
+    if (badge) { badge.textContent = '—'; badge.classList.remove('on'); }
+    document.querySelectorAll('#mst-'+id+' .star').forEach(s => s.classList.remove('lit'));
+    R[id] = 0;
+  });
+
+  // Reset other fields
+  ['oweb','ooff','obi','oscript','oauto','oai','orout','opm'].forEach(id => {
+    const chk = document.getElementById('chk-'+id);
+    if (chk) chk.checked = false;
+    const inp = document.getElementById('oinp-'+id);
+    if (inp) { inp.classList.add('locked'); inp.disabled = true; inp.value = ''; }
+    const lbl = document.getElementById('lbl-'+id);
+    if (lbl) lbl.classList.remove('on');
+  });
+
+  // Reset submit button
+  const btn = document.getElementById('btnSubmit');
+  btn.textContent = 'Submit Response';
+  btn.disabled = false;
+
+  // Clear errors
+  document.querySelectorAll('.err').forEach(e => e.classList.remove('err'));
+
+  // Show form, hide success
+  document.getElementById('mform').style.display = 'block';
+  document.getElementById('succ').style.display = 'none';
+  document.getElementById('prog').style.width = '0%';
+
+  // Scroll to top
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>
