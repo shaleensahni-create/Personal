@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shalin Singh Sahni — Operations Manager</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;700;900&family=DM+Mono:wght@300;400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#000;color:#fff;font-family:'DM Mono',monospace;overflow:hidden;cursor:none;}
+  canvas{position:fixed;top:0;left:0;z-index:0;}
+
+  /* CURSOR */
+  #cur{width:8px;height:8px;background:#00e5ff;border-radius:50%;position:fixed;pointer-events:none;z-index:9999;mix-blend-mode:screen;transition:transform .1s;}
+  #cur2{width:32px;height:32px;border:1px solid rgba(0,229,255,.5);border-radius:50%;position:fixed;pointer-events:none;z-index:9998;transition:width .3s,height .3s;}
+
+  /* MAIN UI LAYER */
+  #ui{position:fixed;inset:0;z-index:10;pointer-events:none;}
+
+  /* SECTIONS */
+  .sec{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    opacity:0;transition:opacity 1.2s ease;pointer-events:none;
+    padding:40px 20px;
+  }
+  .sec.active{opacity:1;pointer-events:auto;}
+
+  /* NAV DOTS */
+  #nav{
+    position:fixed;right:28px;top:50%;transform:translateY(-50%);
+    display:flex;flex-direction:column;gap:12px;z-index:20;
+  }
+  .ndot{
+    width:7px;height:7px;border-radius:50%;
+    border:1px solid rgba(0,229,255,.35);cursor:pointer;
+    transition:all .3s;position:relative;
+  }
+  .ndot::after{
+    content:attr(data-l);position:absolute;right:16px;top:50%;
+    transform:translateY(-50%);font-size:9px;letter-spacing:.12em;
+    color:rgba(0,229,255,.5);white-space:nowrap;opacity:0;
+    transition:opacity .2s;font-family:'DM Mono',monospace;
+  }
+  .ndot:hover::after,.ndot.on::after{opacity:1;}
+  .ndot.on,.ndot:hover{background:#00e5ff;border-color:#00e5ff;box-shadow:0 0 10px rgba(0,229,255,.6);}
+
+  /* SCROLL HINT */
+  #scrollhint{
+    position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    z-index:20;opacity:.6;animation:fade 2s ease-in-out infinite;
+  }
+  #scrollhint span{font-size:9px;letter-spacing:.3em;color:rgba(0,229,255,.7);}
+  .shline{width:1px;height:44px;background:linear-gradient(#00e5ff,transparent);}
+  @keyframes fade{0%,100%{opacity:.3;}50%{opacity:.7;}}
+
+  /* PROGRESS BAR */
+  #progress{
+    position:fixed;top:0;left:0;height:2px;
+    background:linear-gradient(90deg,#00e5ff,#7c3aed);
+    transition:width .5s ease;z-index:20;
+  }
+
+  /* SECTION COUNTER */
+  #counter{
+    position:fixed;bottom:32px;right:28px;
+    font-size:11px;letter-spacing:.2em;color:rgba(255,255,255,.3);z-index:20;
+  }
+  #counter span{color:#00e5ff;}
+
+  /* ── TYPOGRAPHY SYSTEM ── */
+  .label{font-size:10px;letter-spacing:.35em;color:#00e5ff;text-transform:uppercase;margin-bottom:16px;}
+  .title{font-family:'Unbounded',sans-serif;font-weight:900;line-height:1;letter-spacing:-.03em;}
+  .title-xl{font-size:clamp(2.8rem,6vw,5.5rem);}
+  .title-lg{font-size:clamp(2rem,4vw,3.5rem);}
+  .title-md{font-size:clamp(1.4rem,2.5vw,2rem);}
+  .subtitle{font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(.95rem,1.8vw,1.3rem);color:rgba(255,255,255,.55);margin-top:12px;}
+  .grad{background:linear-gradient(135deg,#fff 0%,#b0bec5 40%,#00e5ff 70%,#7c3aed 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .grad-g{background:linear-gradient(135deg,#00e5ff,#10b981);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+  /* ── GLASS CARDS ── */
+  .glass{
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(0,229,255,.15);
+    border-radius:16px;backdrop-filter:blur(12px);
+    transition:border-color .3s,box-shadow .3s;
+  }
+  .glass:hover{border-color:rgba(0,229,255,.35);box-shadow:0 0 30px rgba(0,229,255,.08);}
+
+  /* ── SECTION 0: HERO ── */
+  #s0{text-align:center;}
+  .hero-name{font-family:'Unbounded',sans-serif;font-weight:900;font-size:clamp(3rem,7vw,6.5rem);letter-spacing:-.03em;line-height:1;}
+  .hero-sub{font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(1rem,2vw,1.5rem);color:rgba(255,255,255,.5);margin:16px 0 32px;}
+  .dual-roles{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:40px;}
+  .role-pill{
+    display:flex;align-items:center;gap:8px;
+    padding:10px 22px;border-radius:100px;font-size:10px;
+    letter-spacing:.18em;font-family:'DM Mono',monospace;
+  }
+  .role-pill.ops{background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.3);color:#00e5ff;}
+  .role-pill.cspc{background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.3);color:#10b981;}
+  .role-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;animation:bpulse 2s ease-in-out infinite;}
+  @keyframes bpulse{0%,100%{opacity:.5;transform:scale(1);}50%{opacity:1;transform:scale(1.4);}}
+  .hero-chips{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .chip{font-size:9px;letter-spacing:.13em;padding:6px 14px;border-radius:100px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.5);}
+
+  /* ── SECTION 1: WHAT I DO ── */
+  #s1 .wdo-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+    max-width:900px;width:100%;margin-top:32px;
+  }
+  .wdo-card{padding:24px;text-align:left;}
+  .wdo-icon{font-size:22px;margin-bottom:10px;}
+  .wdo-title{font-family:'Unbounded',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.1em;margin-bottom:8px;text-transform:uppercase;}
+  .wdo-title.c{color:#00e5ff;}.wdo-title.g{color:#10b981;}.wdo-title.y{color:#f59e0b;}
+  .wdo-desc{font-size:10.5px;line-height:1.7;color:rgba(255,255,255,.4);}
+
+  /* ── SECTION 2: EXPERIENCE ── */
+  #s2 .exp-scroll{
+    max-width:780px;width:100%;margin-top:28px;
+    max-height:65vh;overflow-y:auto;padding-right:8px;
+  }
+  #s2 .exp-scroll::-webkit-scrollbar{width:2px;}
+  #s2 .exp-scroll::-webkit-scrollbar-track{background:transparent;}
+  #s2 .exp-scroll::-webkit-scrollbar-thumb{background:rgba(0,229,255,.3);border-radius:2px;}
+  .exp-item{padding:20px 24px;margin-bottom:14px;position:relative;}
+  .exp-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;border-radius:2px;}
+  .exp-item.curr::before{background:linear-gradient(#10b981,#00e5ff);}
+  .exp-item.past::before{background:rgba(0,229,255,.25);}
+  .exp-role{font-family:'Unbounded',sans-serif;font-weight:700;font-size:.82rem;margin-bottom:4px;}
+  .exp-co{font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;}
+  .exp-co.c{color:#00e5ff;}.exp-co.g{color:#10b981;}
+  .exp-period{display:inline-block;font-size:9px;padding:3px 10px;border-radius:100px;background:rgba(121,134,203,.1);border:1px solid rgba(121,134,203,.2);color:rgba(121,134,203,.8);letter-spacing:.05em;margin-bottom:10px;}
+  .exp-pts{list-style:none;}
+  .exp-pts li{font-size:10.5px;color:rgba(255,255,255,.45);line-height:1.7;padding-left:14px;position:relative;margin-bottom:2px;}
+  .exp-pts li::before{content:'›';position:absolute;left:0;color:rgba(0,229,255,.5);}
+  .exp-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+  .etag{font-size:8.5px;padding:2px 8px;border-radius:3px;letter-spacing:.06em;text-transform:uppercase;}
+  .etag.b{background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.15);color:#00e5ff;}
+  .etag.g{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);color:#10b981;}
+  .etag.y{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);color:#f59e0b;}
+  .dual-badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+  .db{font-size:8px;letter-spacing:.1em;padding:3px 10px;border-radius:100px;text-transform:uppercase;font-weight:600;}
+  .db.ops{background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);color:#00e5ff;}
+  .db.cspc{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);color:#10b981;}
+
+  /* ── SECTION 3: SKILLS ── */
+  #s3 .skills-wrap{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+    max-width:860px;width:100%;margin-top:28px;
+  }
+  .sk-card{padding:20px 22px;}
+  .sk-head{font-family:'Unbounded',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(0,229,255,.08);}
+  .sk-head.c{color:#00e5ff;}.sk-head.g{color:#10b981;}.sk-head.y{color:#f59e0b;}
+  .stag{display:inline-block;font-size:9.5px;padding:3px 10px;border-radius:100px;margin:3px;letter-spacing:.03em;transition:all .2s;cursor:default;}
+  .stag.c{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.12);color:rgba(0,229,255,.7);}
+  .stag.c:hover{background:rgba(0,229,255,.12);color:#00e5ff;transform:translateY(-2px);}
+  .stag.g{background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.12);color:rgba(16,185,129,.7);}
+  .stag.g:hover{background:rgba(16,185,129,.12);color:#10b981;transform:translateY(-2px);}
+  .stag.v{background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.15);color:rgba(167,139,250,.7);}
+  .stag.v:hover{background:rgba(124,58,237,.12);color:#a78bfa;transform:translateY(-2px);}
+  .stag.y{background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.12);color:rgba(251,191,36,.7);}
+  .stag.y:hover{transform:translateY(-2px);}
+
+  /* ── SECTION 4: PROJECTS ── */
+  #s4 .proj-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+    max-width:900px;width:100%;margin-top:28px;
+  }
+  .proj-card{padding:22px;display:flex;flex-direction:column;gap:10px;}
+  .proj-ico{font-size:20px;width:38px;height:38px;border-radius:8px;background:linear-gradient(135deg,rgba(0,229,255,.08),rgba(124,58,237,.08));border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;}
+  .proj-name{font-family:'Unbounded',sans-serif;font-weight:700;font-size:.72rem;letter-spacing:.02em;}
+  .proj-text{font-size:10px;line-height:1.65;color:rgba(255,255,255,.38);flex:1;}
+  .proj-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto;}
+  .ppill{font-size:8.5px;padding:2px 7px;border-radius:100px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);color:rgba(0,229,255,.55);}
+
+  /* ── SECTION 5: CONTACT ── */
+  #s5{text-align:center;}
+  .contact-box{max-width:560px;width:100%;padding:40px;margin-top:24px;text-align:center;}
+  .contact-h{font-family:'Unbounded',sans-serif;font-weight:900;font-size:clamp(1.6rem,3vw,2.5rem);letter-spacing:-.02em;margin-bottom:8px;}
+  .contact-sub{font-family:'Instrument Serif',serif;font-style:italic;color:rgba(255,255,255,.4);font-size:1rem;margin-bottom:28px;}
+  .cbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:28px;}
+  .cbtn{display:flex;align-items:center;gap:7px;padding:11px 22px;border-radius:100px;font-size:10px;letter-spacing:.1em;text-decoration:none;transition:all .3s;cursor:pointer;font-family:'DM Mono',monospace;}
+  .cbtn.p{background:#00e5ff;color:#000;font-weight:600;}
+  .cbtn.p:hover{background:#00f5ff;box-shadow:0 0 24px rgba(0,229,255,.5);transform:translateY(-2px);}
+  .cbtn.s{border:1px solid rgba(0,229,255,.25);color:rgba(0,229,255,.7);}
+  .cbtn.s:hover{border-color:#00e5ff;color:#00e5ff;transform:translateY(-2px);}
+  .cinfo-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+  .cinfo-item{display:flex;align-items:center;gap:8px;font-size:10px;color:rgba(255,255,255,.4);}
+  .cinfo-item::before{content:'';width:4px;height:4px;background:rgba(0,229,255,.5);border-radius:50%;}
+
+  /* Education strip */
+  .edu-strip{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+  .edu-chip{font-size:9px;letter-spacing:.12em;padding:6px 14px;border-radius:100px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);color:rgba(167,139,250,.7);}
+
+  /* MOBILE */
+  @media(max-width:768px){
+    #s1 .wdo-grid,#s3 .skills-wrap,#s4 .proj-grid{grid-template-columns:1fr 1fr;}
+    .title-xl{font-size:2.6rem;}
+    #nav{display:none;}
+  }
+  @media(max-width:480px){
+    #s1 .wdo-grid,#s3 .skills-wrap,#s4 .proj-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+<div id="cur"></div><div id="cur2"></div>
+<div id="progress" style="width:0%"></div>
+<div id="counter"><span id="cnum">01</span> / 06</div>
+
+<!-- NAV DOTS -->
+<div id="nav">
+  <div class="ndot on" data-i="0" data-l="Home"></div>
+  <div class="ndot" data-i="1" data-l="What I Do"></div>
+  <div class="ndot" data-i="2" data-l="Experience"></div>
+  <div class="ndot" data-i="3" data-l="Skills"></div>
+  <div class="ndot" data-i="4" data-l="Projects"></div>
+  <div class="ndot" data-i="5" data-l="Contact"></div>
+</div>
+
+<div id="scrollhint"><span>SCROLL</span><div class="shline"></div></div>
+
+<div id="ui">
+
+<!-- ── S0: HERO ── -->
+<div id="s0" class="sec active">
+  <div class="label">Operations Manager & CSPC · Nov 2021 – Present</div>
+  <h1 class="hero-name grad">SHALIN<br>SINGH SAHNI</h1>
+  <p class="hero-sub">Keeping teams running, projects delivered, customers happy</p>
+  <div class="dual-roles">
+    <div class="role-pill ops">⚙ Operations Manager</div>
+    <div class="role-pill cspc">🎯 CSPC — Project Coordinator</div>
+  </div>
+  <div class="hero-chips">
+    <span class="chip">📍 Noida Extension, India</span>
+    <span class="chip">13+ Years Experience</span>
+    <span class="chip">✉ shaleen.sahni@gmail.com</span>
+    <span class="chip">📞 +91 9711905288</span>
+  </div>
+</div>
+
+<!-- ── S1: WHAT I DO ── -->
+<div id="s1" class="sec">
+  <div class="label">02 / Roles & Responsibilities</div>
+  <h2 class="title title-lg grad">What I Do</h2>
+  <div class="wdo-grid">
+    <div class="glass wdo-card">
+      <div class="wdo-icon">⚙️</div>
+      <div class="wdo-title c">Resource & Ops Management</div>
+      <div class="wdo-desc">Own the full operations engine — resource planning, allocation across teams, capacity management, and process optimisation to keep everything running efficiently.</div>
+    </div>
+    <div class="glass wdo-card">
+      <div class="wdo-icon">🎯</div>
+      <div class="wdo-title g">Customer Project Coordination</div>
+      <div class="wdo-desc">As CSPC, I bridge customers and delivery teams — coordinating internally, managing expectations, tracking utilisation, and making sure nothing falls through the cracks.</div>
+    </div>
+    <div class="glass wdo-card">
+      <div class="wdo-icon">📊</div>
+      <div class="wdo-title y">SLA & Quality Oversight</div>
+      <div class="wdo-desc">End-to-end SLA compliance ownership — monitoring delivery timelines, enforcing quality checkpoints, flagging risks early, and ensuring every output meets the agreed standard.</div>
+    </div>
+    <div class="glass wdo-card">
+      <div class="wdo-icon">📈</div>
+      <div class="wdo-title c">MIS Reporting & Dashboards</div>
+      <div class="wdo-desc">Build and maintain reporting infrastructure — MIS dashboards, utilisation reports, performance tracking, and budget forecasting using Advanced Excel (VBA & Macros).</div>
+    </div>
+    <div class="glass wdo-card">
+      <div class="wdo-icon">👥</div>
+      <div class="wdo-title g">Team Utilisation Management</div>
+      <div class="wdo-desc">Track and optimise how team bandwidth is deployed across projects. Identify bottlenecks, rebalance workloads, and ensure no resource is over-stretched or under-deployed.</div>
+    </div>
+    <div class="glass wdo-card">
+      <div class="wdo-icon">🔄</div>
+      <div class="wdo-title y">Process Improvement</div>
+      <div class="wdo-desc">Continuously improve operational workflows — automating repetitive processes with VBA and AI tools, building SOPs, and reducing overhead through systematic thinking.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── S2: EXPERIENCE ── -->
+<div id="s2" class="sec">
+  <div class="label">03 / Career</div>
+  <h2 class="title title-lg grad">Experience</h2>
+  <div class="exp-scroll">
+
+    <!-- Current: Ops + CSPC -->
+    <div class="glass exp-item curr">
+      <div class="exp-role">Operations Manager <span style="font-weight:300;color:rgba(255,255,255,.4);">& CSPC</span></div>
+      <div class="exp-co g">Marketing Automation Services Company</div>
+      <div class="exp-period">Nov 2021 — Present</div>
+      <div class="dual-badge-row">
+        <span class="db ops">⚙ Operations Manager</span>
+        <span class="db cspc">🎯 CSPC — Project Coordinator</span>
+      </div>
+      <ul class="exp-pts">
+        <li>Managing company-wide resource planning, allocation and utilisation across all teams</li>
+        <li>Overseeing internal processes, operational workflows and efficiency improvements</li>
+        <li>Building & maintaining MIS dashboards and performance tracking systems</li>
+        <li>As CSPC: bridging customers and delivery teams — tracking projects, managing SLAs</li>
+        <li>Managing customer utilisation, escalations, risk flags and quality assurance</li>
+        <li>Ensuring all projects delivered on time, within SLA and to quality standards</li>
+      </ul>
+      <div class="exp-tags">
+        <span class="etag b">Resource Mgmt</span><span class="etag b">Operations</span>
+        <span class="etag g">CSPC</span><span class="etag g">SLA</span>
+        <span class="etag g">Project Delivery</span><span class="etag y">MIS</span>
+      </div>
+    </div>
+
+    <!-- FloralBay -->
+    <div class="glass exp-item past">
+      <div class="exp-role">Head of Operations</div>
+      <div class="exp-co c">Dreams Planet — FloralBay (floralbay.com)</div>
+      <div class="exp-period">Jun 2018 — Present</div>
+      <ul class="exp-pts">
+        <li>Founded & scaled FloralBay — fresh flower brand on Amazon.in, pan-India MFN delivery</li>
+        <li>Complete ops ownership: MIS, dashboards, budget forecasting, inventory, order processing</li>
+        <li>Listing optimisation for 15 ASINs; Buy Box recovery to 90%+; Amazon PPC restructuring</li>
+        <li>Automated order & inventory processes using VBA; managed B2B & B2C sales</li>
+      </ul>
+      <div class="exp-tags">
+        <span class="etag b">Amazon</span><span class="etag y">PPC</span>
+        <span class="etag y">VBA</span><span class="etag b">MIS</span><span class="etag y">Inventory</span>
+      </div>
+    </div>
+
+    <!-- Khelkood -->
+    <div class="glass exp-item past">
+      <div class="exp-role">Sr. Operations Manager</div>
+      <div class="exp-co c">Dynamic IT Solution Pvt Ltd (Khelkood)</div>
+      <div class="exp-period">Apr 2013 — Jun 2018</div>
+      <ul class="exp-pts">
+        <li>Led and managed a team of 15+ employees across operations and e-commerce</li>
+        <li>Automated PO processes with VBA/Macros; built complete Sales Dashboards in Excel</li>
+        <li>Multi-platform e-commerce: Amazon, Flipkart, Paytm, Snapdeal</li>
+        <li>Launched brand Strauss in Fitness — achieved Bestseller status in multiple subcategories</li>
+        <li>Stock procurement & QC with China-based team; pan-India warehouse replenishment</li>
+      </ul>
+      <div class="exp-tags">
+        <span class="etag y">Team of 15+</span><span class="etag b">Amazon</span>
+        <span class="etag b">Flipkart</span><span class="etag y">VBA</span><span class="etag g">Brand Launch</span>
+      </div>
+    </div>
+
+    <!-- YesGrid -->
+    <div class="glass exp-item past">
+      <div class="exp-role">Sales & Operations Manager</div>
+      <div class="exp-co c">Redvolt — YesGrid (yesgrid.com)</div>
+      <div class="exp-period">Nov 2011 — Nov 2012</div>
+      <ul class="exp-pts">
+        <li>Founding team — category development, dealer connect model, product line evaluation</li>
+        <li>Designed last-mile delivery model & OMS fundamentals</li>
+        <li>B2B development across major Indian cities; drove GTM and social media strategy</li>
+      </ul>
+      <div class="exp-tags">
+        <span class="etag g">Founding Team</span><span class="etag b">B2B</span><span class="etag y">OMS</span>
+      </div>
+    </div>
+
+    <!-- Reliance -->
+    <div class="glass exp-item past">
+      <div class="exp-role">Modern Trade Manager</div>
+      <div class="exp-co c">Reliance Communications Ltd.</div>
+      <div class="exp-period">Jul 2011 — Oct 2011</div>
+      <ul class="exp-pts">
+        <li>Managed Pune2 region — GSM Mobile Services & Data Cards</li>
+        <li>Monthly targets: 10K GSM acquisitions + 150 Data Cards; channel & partner management</li>
+      </ul>
+      <div class="exp-tags">
+        <span class="etag b">Channel Sales</span><span class="etag y">GSM</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── S3: SKILLS ── -->
+<div id="s3" class="sec">
+  <div class="label">04 / Core Competencies</div>
+  <h2 class="title title-lg grad">Skills</h2>
+  <div class="skills-wrap">
+    <div class="glass sk-card">
+      <div class="sk-head c">Operations & Management</div>
+      <span class="stag g">Resource Planning</span><span class="stag g">Capacity Mgmt</span>
+      <span class="stag g">SLA Management</span><span class="stag g">Process Improvement</span>
+      <span class="stag g">Stakeholder Mgmt</span>
+    </div>
+    <div class="glass sk-card">
+      <div class="sk-head g">Project Coordination (CSPC)</div>
+      <span class="stag g">Project Tracking</span><span class="stag g">Customer Liaison</span>
+      <span class="stag g">Delivery Oversight</span><span class="stag g">Quality Assurance</span>
+      <span class="stag g">Escalation Mgmt</span>
+    </div>
+    <div class="glass sk-card">
+      <div class="sk-head y">Data & Reporting</div>
+      <span class="stag y">Advanced Excel</span><span class="stag y">VBA & Macros</span>
+      <span class="stag y">MIS Reporting</span><span class="stag y">Dashboards</span>
+      <span class="stag y">Pivot Tables</span><span class="stag y">Forecasting</span>
+    </div>
+    <div class="glass sk-card">
+      <div class="sk-head c">E-Commerce Ops</div>
+      <span class="stag c">Amazon Seller Central</span><span class="stag c">Flipkart</span>
+      <span class="stag c">Amazon PPC</span><span class="stag c">Inventory Mgmt</span>
+      <span class="stag c">Buy Box Strategy</span><span class="stag c">B2B & B2C</span>
+    </div>
+    <div class="glass sk-card">
+      <div class="sk-head c">Tools & Automation</div>
+      <span class="stag v">Python</span><span class="stag v">n8n</span>
+      <span class="stag v">Claude API</span><span class="stag v">Power Automate</span>
+      <span class="stag v">Apps Script</span><span class="stag v">Make.com</span>
+    </div>
+    <div class="glass sk-card">
+      <div class="sk-head c">Leadership & Strategy</div>
+      <span class="stag c">Team Leadership (15+)</span><span class="stag c">Sales Strategy</span>
+      <span class="stag c">Vendor Management</span><span class="stag c">Market Research</span>
+      <span class="stag c">Budget Planning</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── S4: PROJECTS ── -->
+<div id="s4" class="sec">
+  <div class="label">05 / Key Builds</div>
+  <h2 class="title title-lg grad">Projects</h2>
+  <div class="proj-grid">
+    <div class="glass proj-card">
+      <div class="proj-ico">📊</div>
+      <div class="proj-name">Ops MIS Dashboard System</div>
+      <div class="proj-text">Comprehensive MIS dashboards for resource utilisation, project status, SLA heatmaps, and team performance — built in Advanced Excel with full VBA automation.</div>
+      <div class="proj-pills"><span class="ppill">Advanced Excel</span><span class="ppill">VBA Macros</span><span class="ppill">MIS</span></div>
+    </div>
+    <div class="glass proj-card">
+      <div class="proj-ico">🌸</div>
+      <div class="proj-name">FloralBay Amazon Ops</div>
+      <div class="proj-text">Full ops overhaul for 15 ASINs — inventory automation, Buy Box recovery to 90%+, AI image pipeline (Python PIL + Gemini), PPC restructuring.</div>
+      <div class="proj-pills"><span class="ppill">Amazon</span><span class="ppill">Python PIL</span><span class="ppill">VBA</span><span class="ppill">PPC</span></div>
+    </div>
+    <div class="glass proj-card">
+      <div class="proj-ico">🤖</div>
+      <div class="proj-name">AI-Powered Ops Automation</div>
+      <div class="proj-text">Personal agentic AI system on VPS — four domain agents covering operations, e-commerce, trading and personal productivity via Telegram bot interface.</div>
+      <div class="proj-pills"><span class="ppill">Claude API</span><span class="ppill">n8n</span><span class="ppill">Python</span><span class="ppill">FastAPI</span></div>
+    </div>
+    <div class="glass proj-card">
+      <div class="proj-ico">🏆</div>
+      <div class="proj-name">Brand Strauss — Bestseller</div>
+      <div class="proj-text">Launched Strauss fitness brand across Amazon, Flipkart, Paytm, Snapdeal at Khelkood. Multiple products achieved Bestseller status through ops, pricing & PPC strategy.</div>
+      <div class="proj-pills"><span class="ppill">Amazon</span><span class="ppill">Flipkart</span><span class="ppill">Brand Ops</span></div>
+    </div>
+    <div class="glass proj-card">
+      <div class="proj-ico">📄</div>
+      <div class="proj-name">Google Docs Auto-Sync</div>
+      <div class="proj-text">Google Apps Script tool — syncs all docs from a folder into a master doc with delta Smart Sync and Fresh Copy modes for streamlined ops reporting.</div>
+      <div class="proj-pills"><span class="ppill">Apps Script</span><span class="ppill">Drive API</span><span class="ppill">Docs API</span></div>
+    </div>
+    <div class="glass proj-card">
+      <div class="proj-ico">📈</div>
+      <div class="proj-name">Nifty 50 Algo Trading</div>
+      <div class="proj-text">Personal project: 7-sheet Google Sheets system (1,815+ formulas) + Python modular system with Monte Carlo simulation. ORB intraday bot via Dhan API.</div>
+      <div class="proj-pills"><span class="ppill">Python</span><span class="ppill">Dhan API</span><span class="ppill">Monte Carlo</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── S5: CONTACT ── -->
+<div id="s5" class="sec">
+  <div class="label">06 / Let's Connect</div>
+  <h2 class="title title-lg grad">Contact</h2>
+  <div class="glass contact-box">
+    <div class="contact-h grad-g">Open to Conversations</div>
+    <div class="contact-sub">Operations · Project Coordination · E-Commerce · Process Automation</div>
+    <div class="cbtns">
+      <a class="cbtn p" href="mailto:shaleen.sahni@gmail.com">✉ shaleen.sahni@gmail.com</a>
+      <a class="cbtn s" href="tel:+919711905288">📞 +91 9711905288</a>
+    </div>
+    <div class="cinfo-row">
+      <span class="cinfo-item">D504 Samridhi Grand, Noida Extension</span>
+      <span class="cinfo-item">07 Sept 1987</span>
+      <span class="cinfo-item">English & Hindi</span>
+    </div>
+  </div>
+  <div class="edu-strip">
+    <span class="edu-chip">🎓 PGDM Marketing — SIOM Pune</span>
+    <span class="edu-chip">💻 BCA — IMS Noida</span>
+    <span class="edu-chip">📚 CBSE Secondary</span>
+  </div>
+</div>
+
+</div><!-- /ui -->
+
+<script>
+// ─────────────────────────────────────────────
+// THREE.JS BACKGROUND — particle field + floating geometry
+// ─────────────────────────────────────────────
+const canvas = document.getElementById('bg');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
+camera.position.z = 5;
+
+// Particle field
+const pCount = 2200;
+const pGeo = new THREE.BufferGeometry();
+const pos = new Float32Array(pCount * 3);
+const colors = new Float32Array(pCount * 3);
+for(let i=0;i<pCount;i++){
+  pos[i*3]   = (Math.random()-0.5)*30;
+  pos[i*3+1] = (Math.random()-0.5)*30;
+  pos[i*3+2] = (Math.random()-0.5)*20;
+  const t = Math.random();
+  if(t < 0.5){ colors[i*3]=0;colors[i*3+1]=0.9;colors[i*3+2]=1; }
+  else if(t < 0.8){ colors[i*3]=0.49;colors[i*3+1]=0.23;colors[i*3+2]=0.93; }
+  else{ colors[i*3]=0.063;colors[i*3+1]=0.725;colors[i*3+2]=0.506; }
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(colors,3));
+const pMat = new THREE.PointsMaterial({size:.035, vertexColors:true, transparent:true, opacity:.7});
+const particles = new THREE.Points(pGeo,pMat);
+scene.add(particles);
+
+// Grid lines
+const gridHelper = new THREE.GridHelper(30,30,'#001a2e','#001a2e');
+gridHelper.position.y = -4;
+gridHelper.material.opacity = 0.3;
+gridHelper.material.transparent = true;
+scene.add(gridHelper);
+
+// Floating wireframe objects
+const objs = [];
+const geos = [
+  new THREE.IcosahedronGeometry(0.6, 0),
+  new THREE.OctahedronGeometry(0.5, 0),
+  new THREE.TetrahedronGeometry(0.55, 0),
+  new THREE.IcosahedronGeometry(0.4, 1),
+];
+const wireMat1 = new THREE.MeshBasicMaterial({color:0x00e5ff, wireframe:true, transparent:true, opacity:0.18});
+const wireMat2 = new THREE.MeshBasicMaterial({color:0x7c3aed, wireframe:true, transparent:true, opacity:0.16});
+const wireMat3 = new THREE.MeshBasicMaterial({color:0x10b981, wireframe:true, transparent:true, opacity:0.16});
+const mats = [wireMat1,wireMat2,wireMat3,wireMat1];
+
+const positions = [[-3.5,1.8,-2],[3.2,-1.5,-3],[-2.8,-2,1],[3,-2.5,-1.5]];
+geos.forEach((g,i)=>{
+  const mesh = new THREE.Mesh(g, mats[i]);
+  mesh.position.set(...positions[i]);
+  mesh.userData = {
+    rx: (Math.random()-.5)*.008,
+    ry: (Math.random()-.5)*.01,
+    floatSpeed: Math.random()*.002+.001,
+    floatOffset: Math.random()*Math.PI*2
+  };
+  scene.add(mesh);
+  objs.push(mesh);
+});
+
+// Large background ring
+const ringGeo = new THREE.TorusGeometry(6, 0.015, 8, 80);
+const ringMat = new THREE.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.06});
+const ring = new THREE.Mesh(ringGeo,ringMat);
+ring.rotation.x = Math.PI/4;
+scene.add(ring);
+
+const ring2Geo = new THREE.TorusGeometry(9, 0.01, 8, 100);
+const ring2Mat = new THREE.MeshBasicMaterial({color:0x7c3aed,transparent:true,opacity:.04});
+const ring2 = new THREE.Mesh(ring2Geo,ring2Mat);
+ring2.rotation.x = -Math.PI/6;
+ring2.rotation.z = Math.PI/5;
+scene.add(ring2);
+
+// Mouse
+let mx=0,my=0,targetX=0,targetY=0;
+document.addEventListener('mousemove',e=>{
+  mx = (e.clientX/window.innerWidth-.5)*2;
+  my = -(e.clientY/window.innerHeight-.5)*2;
+});
+
+let clock = 0;
+function animate(){
+  requestAnimationFrame(animate);
+  clock += 0.005;
+
+  // Camera drift
+  targetX += (mx*.3 - targetX)*.04;
+  targetY += (my*.2 - targetY)*.04;
+  camera.rotation.y = targetX * .08;
+  camera.rotation.x = targetY * .06;
+
+  // Particles slow rotation
+  particles.rotation.y += 0.0003;
+  particles.rotation.x += 0.0001;
+
+  // Floating objects
+  objs.forEach(o=>{
+    o.rotation.x += o.userData.rx;
+    o.rotation.y += o.userData.ry;
+    o.position.y += Math.sin(clock*0.8 + o.userData.floatOffset) * o.userData.floatSpeed;
+  });
+
+  ring.rotation.z += 0.0006;
+  ring2.rotation.y += 0.0004;
+
+  renderer.render(scene,camera);
+}
+animate();
+
+window.addEventListener('resize',()=>{
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ─────────────────────────────────────────────
+// SECTION NAVIGATION
+// ─────────────────────────────────────────────
+const sections = document.querySelectorAll('.sec');
+const dots = document.querySelectorAll('.ndot');
+const total = sections.length;
+let current = 0;
+let isAnimating = false;
+
+function goTo(n){
+  if(n===current||isAnimating) return;
+  isAnimating = true;
+  sections[current].classList.remove('active');
+  dots[current].classList.remove('on');
+  current = n;
+  sections[current].classList.add('active');
+  dots[current].classList.add('on');
+  document.getElementById('cnum').textContent = String(current+1).padStart(2,'0');
+  document.getElementById('progress').style.width = ((current/(total-1))*100)+'%';
+  document.getElementById('scrollhint').style.opacity = current < total-1 ? '1' : '0';
+  setTimeout(()=>{ isAnimating=false; }, 800);
+}
+
+dots.forEach(d=>d.addEventListener('click',()=>goTo(+d.dataset.i)));
+
+// Wheel scroll
+let wheelBuf = 0;
+window.addEventListener('wheel',e=>{
+  if(isAnimating) return;
+  wheelBuf += e.deltaY;
+  if(wheelBuf > 60){ goTo(Math.min(current+1,total-1)); wheelBuf=0; }
+  else if(wheelBuf < -60){ goTo(Math.max(current-1,0)); wheelBuf=0; }
+  setTimeout(()=>{ wheelBuf=0; },400);
+},{passive:true});
+
+// Touch swipe
+let ty=0;
+window.addEventListener('touchstart',e=>{ ty=e.touches[0].clientY; },{passive:true});
+window.addEventListener('touchend',e=>{
+  const dy = ty - e.changedTouches[0].clientY;
+  if(Math.abs(dy)>40){ if(dy>0) goTo(Math.min(current+1,total-1)); else goTo(Math.max(current-1,0)); }
+},{passive:true});
+
+// Keyboard
+window.addEventListener('keydown',e=>{
+  if(e.key==='ArrowDown'||e.key==='PageDown') goTo(Math.min(current+1,total-1));
+  if(e.key==='ArrowUp'||e.key==='PageUp') goTo(Math.max(current-1,0));
+});
+
+// ─────────────────────────────────────────────
+// CUSTOM CURSOR
+// ─────────────────────────────────────────────
+const cur=document.getElementById('cur');
+const cur2=document.getElementById('cur2');
+let cx=0,cy=0,crx=0,cry=0;
+document.addEventListener('mousemove',e=>{
+  cx=e.clientX; cy=e.clientY;
+  cur.style.transform=`translate(${cx-4}px,${cy-4}px)`;
+});
+(function tc(){
+  crx+=(cx-crx-16)*.12; cry+=(cy-cry-16)*.12;
+  cur2.style.transform=`translate(${crx}px,${cry}px)`;
+  requestAnimationFrame(tc);
+})();
+document.querySelectorAll('a,button,.ndot,.glass').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{ cur2.style.width='52px';cur2.style.height='52px';cur2.style.opacity='.7'; });
+  el.addEventListener('mouseleave',()=>{ cur2.style.width='32px';cur2.style.height='32px';cur2.style.opacity='.5'; });
+});
+
+// Initial progress
+document.getElementById('progress').style.width='0%';
+</script>
+</body>
+</html>
